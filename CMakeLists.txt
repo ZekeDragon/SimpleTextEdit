@@ -12,16 +12,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets PrintSupport LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport LinguistTools)
 
-set(TS_FILES SimpleTextEdit_en_US.ts)
+set(TS_FILES
+        SimpleTextEdit_en_US.ts
+        SimpleTextEdit_es_US.ts
+        SimpleTextEdit_en_CA.ts
+        SimpleTextEdit_fr_CA.ts)
 
 set(PROJECT_SOURCES
         main.cpp
+        findflags.hpp
         mainwindow.cpp
         mainwindow.hpp
         mainwindow.ui
         aboutdialog.cpp
         aboutdialog.hpp
         aboutdialog.ui
+        findreplacedialog.cpp
+        findreplacedialog.hpp
+        findreplacedialog.ui
         images.qrc
         ${TS_FILES}
 )
@@ -36,7 +44,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 
-    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    qt_add_translations(SimpleTextEdit TS_FILES ${TS_FILES})
 else()
     if(ANDROID)
         add_library(SimpleTextEdit SHARED

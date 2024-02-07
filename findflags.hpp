@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
 ** The Simple Qt Text Editor Application
-** main.cpp
+** findflags.hpp
 ** Copyright (C) 2024 Ezekiel Oruven
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -16,26 +16,21 @@
 ** COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 ** OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***********************************************************************************************************************/
-#include "mainwindow.hpp"
+#pragma once
 
-#include <QApplication>
-#include <QLocale>
-#include <QTranslator>
+#include <bitset>
 
-int main(int argc, char *argv[])
+#include <QMetaType>
+
+typedef std::bitset<5> FindFlags;
+Q_DECLARE_METATYPE(FindFlags)
+
+namespace FFlags
 {
-	QApplication a(argc, argv);
-
-	QTranslator translator;
-	const QStringList uiLanguages = QLocale::system().uiLanguages();
-	for (const QString &locale : uiLanguages) {
-		const QString baseName = "SimpleTextEdit_" + QLocale(locale).name();
-		if (translator.load(":/i18n/" + baseName)) {
-			a.installTranslator(&translator);
-			break;
-		}
-	}
-	MainWindow w;
-	w.show();
-	return a.exec();
+[[maybe_unused]] constexpr FindFlags None =                0;
+[[maybe_unused]] constexpr FindFlags FindBackward =	       1 << 0;
+[[maybe_unused]] constexpr FindFlags FindCaseSensitively = 1 << 1;
+[[maybe_unused]] constexpr FindFlags FindWholeWords =      1 << 2;
+[[maybe_unused]] constexpr FindFlags FindByRegex =         1 << 3;
+[[maybe_unused]] constexpr FindFlags WrapAround =          1 << 4;
 }

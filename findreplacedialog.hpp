@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
 ** The Simple Qt Text Editor Application
-** main.cpp
+** findreplacedialog.hpp
 ** Copyright (C) 2024 Ezekiel Oruven
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -16,26 +16,50 @@
 ** COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 ** OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***********************************************************************************************************************/
-#include "mainwindow.hpp"
+#pragma once
 
-#include <QApplication>
-#include <QLocale>
-#include <QTranslator>
+#include <QDialog>
 
-int main(int argc, char *argv[])
+#include <memory>
+
+#include "findflags.hpp"
+
+class FindReplaceDialog : public QDialog
 {
-	QApplication a(argc, argv);
+	Q_OBJECT
 
-	QTranslator translator;
-	const QStringList uiLanguages = QLocale::system().uiLanguages();
-	for (const QString &locale : uiLanguages) {
-		const QString baseName = "SimpleTextEdit_" + QLocale(locale).name();
-		if (translator.load(":/i18n/" + baseName)) {
-			a.installTranslator(&translator);
-			break;
-		}
-	}
-	MainWindow w;
-	w.show();
-	return a.exec();
-}
+public:
+	explicit FindReplaceDialog(QWidget *parent = nullptr);
+	~FindReplaceDialog();
+
+	void focusFind(bool findOrReplace);
+
+signals:
+	void findRequested(FindFlags flags, QString const &seek);
+	void replaceRequested(FindFlags flags, QString const &seek, QString const &replace);
+	void replaceAllRequested(FindFlags flags, QString const &seek, QString const &replace);
+
+public slots:
+	void findFieldChanged(QString const &newText);
+	void replaceFieldChanged(QString const &newText);
+
+	void regexToggled(bool checked);
+
+	void findNextPressed();
+	void replacePressed();
+	void replaceAllPressed();
+
+	void reportNoFind();
+
+private slots:
+	void silenceNotFound();
+
+protected:
+	void keyPressEvent(QKeyEvent *event) override;
+	void keyReleaseEvent(QKeyEvent *event) override;
+
+private:
+	struct Impl;
+	std::unique_ptr<Impl> im;
+};
+

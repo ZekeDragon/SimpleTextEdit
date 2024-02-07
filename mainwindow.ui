@@ -38,6 +38,9 @@
       <property name="lineWrapMode">
        <enum>QTextEdit::NoWrap</enum>
       </property>
+      <property name="acceptRichText">
+       <bool>false</bool>
+      </property>
      </widget>
     </item>
    </layout>
@@ -168,6 +171,9 @@
    </property>
   </action>
   <action name="action_Undo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Undo</string>
    </property>
@@ -176,6 +182,9 @@
    </property>
   </action>
   <action name="actionCu_t">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Cu&amp;t</string>
    </property>
@@ -184,6 +193,9 @@
    </property>
   </action>
   <action name="action_Copy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Copy</string>
    </property>
@@ -192,6 +204,9 @@
    </property>
   </action>
   <action name="action_Paste">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>&amp;Paste</string>
    </property>
@@ -200,6 +215,9 @@
    </property>
   </action>
   <action name="actionDe_lete">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>De&amp;lete</string>
    </property>
@@ -283,6 +301,9 @@
    </property>
   </action>
   <action name="actionR_edo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>R&amp;edo</string>
    </property>
@@ -674,6 +695,86 @@
     <hint type="destinationlabel">
      <x>399</x>
      <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mainEdit</sender>
+   <signal>undoAvailable(bool)</signal>
+   <receiver>action_Undo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mainEdit</sender>
+   <signal>redoAvailable(bool)</signal>
+   <receiver>actionR_edo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mainEdit</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>action_Copy</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mainEdit</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>actionCu_t</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mainEdit</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>actionDe_lete</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>
