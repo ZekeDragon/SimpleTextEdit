@@ -19,14 +19,29 @@
 #include "aboutdialog.hpp"
 #include "ui_aboutdialog.h"
 
+#include "buildinfo.hpp"
+
+struct AboutDialog::Impl
+{
+	Impl(AboutDialog *top) : top(top)
+	{
+		ui.setupUi(top);
+		ui.mainNameLabel->setText(projectName());
+		ui.versionLabel->setText(ui.versionLabel->text() + " " + versionString());
+	}
+
+	AboutDialog *top;
+	Ui::AboutDialog ui;
+};
+
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AboutDialog)
+    im(std::make_unique<AboutDialog::Impl>(this))
 {
-	ui->setupUi(this);
+	// No implementation.
 }
 
 AboutDialog::~AboutDialog()
 {
-	delete ui;
+	// No implementation.
 }

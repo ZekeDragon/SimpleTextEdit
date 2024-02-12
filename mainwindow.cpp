@@ -30,9 +30,17 @@
 #include <QTextStream>
 #include <QDesktopServices>
 #include <QCloseEvent>
+#include <QTextCharFormat>
+#include <QRegularExpression>
+#include <QLabel>
+
+#include <tuple>
+#include <array>
 
 #include "aboutdialog.hpp"
 #include "findreplacedialog.hpp"
+
+constexpr size_t DEFAULT_ZOOM = 9;
 
 struct MainWindow::Impl
 {
@@ -45,9 +53,24 @@ struct MainWindow::Impl
 	    findrep(top)
 	{
 		ui.setupUi(top);
-		fDialog.setCurrentFont(ui.mainEdit->currentFont());
+		fDialog.setCurrentFont(ui.mainEdit->currentCharFormat().font());
 		document = ui.mainEdit->document();
+		ui.mainEdit->setLineWrapMode(QPlainTextEdit::NoWrap);
 		updateFileDisplay();
+		lineColLabel.setMinimumWidth(120);
+		zoomLabel.setMinimumWidth(60);
+		lineEndLabel.setMinimumWidth(100);
+		formatLabel.setMinimumWidth(100);
+		updateLineColLabel();
+		generateSlideRule();
+		updateZoomLabel();
+		lineEndLabel.setText("UNIX (LF)");
+		formatLabel.setText("UTF-8");
+		ui.statusbar->addPermanentWidget(new QLabel(""));
+		ui.statusbar->addPermanentWidget(&lineColLabel);
+		ui.statusbar->addPermanentWidget(&zoomLabel);
+		ui.statusbar->addPermanentWidget(&lineEndLabel);
+		ui.statusbar->addPermanentWidget(&formatLabel);
 		QObject::connect(&findrep, SIGNAL(findRequested(FindFlags,QString)),
 		                 top,      SLOT(doFindRequest(FindFlags,QString)));
 		QObject::connect(&findrep, SIGNAL(replaceRequested(FindFlags,QString,QString)),
@@ -60,8 +83,47 @@ struct MainWindow::Impl
 	void updateFileDisplay()
 	{
 		QString name = document->isModified() ? "*" : "";
-		name += fileName.isEmpty() ? tr("Untitled") : fileName.section('/', -1);
-		top->setWindowTitle(name.append(tr(" - Simple Qt Text Editor")));
+		name.append(fileName.isEmpty() ? tr("Untitled") : fileName.section('/', -1));
+		top->setWindowTitle(name + tr(" - Simple Qt Text Editor"));
+	}
+
+	void updateLineColLabel()
+	{
+		QTextCursor current = ui.mainEdit->textCursor();
+		QString lineSide = tr("Ln ") + QString::number(current.blockNumber());
+		QString colSide = tr(", Col ") + QString::number(current.positionInBlock());
+		lineColLabel.setText(lineSide + colSide);
+	}
+
+	template<typename Func>
+	void doZoom(Func f)
+	{
+		if (size_t newZoom = f(currentZoom); newZoom < zoomSlideRule.size())
+		{
+			currentZoom = newZoom;
+		}
+
+		QFont newSize = document->defaultFont();
+		newSize.setPointSizeF(zoomSlideRule[currentZoom]);
+		document->setDefaultFont(newSize);
+		updateZoomLabel();
+	}
+
+	void generateSlideRule()
+	{
+		qreal step = 0;
+		const qreal basis = document->defaultFont().pointSizeF();
+		for (qreal &sr : zoomSlideRule)
+		{
+			sr = basis * (step += .1);
+		}
+	}
+
+	void updateZoomLabel()
+	{
+		int num = int((currentZoom + 1) * 10);
+		//: Zoom level string, passed value will be between 10 and 500, in 10 point increments.
+		zoomLabel.setText(tr("%n%", "MainWindow", num));
 	}
 
 	bool editedCheck()
@@ -83,14 +145,67 @@ struct MainWindow::Impl
 		return true;
 	}
 
+	void openFindReplace(bool findOrReplace)
+	{
+		findrep.focusFind(findOrReplace);
+		if (QTextCursor content = ui.mainEdit->textCursor(); content.hasSelection())
+		{
+			findrep.setFindText(content.selectedText());
+		}
+		findrep.show();
+	}
+
+	std::tuple<QTextDocument::FindFlags, bool, bool> breakdownFindFlags(FindFlags flags)
+	{
+		auto qFlags = QFlags<QTextDocument::FindFlag>::fromInt(flags.to_ulong() & 0b111);
+		return { qFlags, flags.test(3), flags.test(4) };
+	}
+
+	QTextCursor findNext(FindFlags flags, QString const &seek)
+	{
+		return findNext(flags, seek, ui.mainEdit->textCursor());
+	}
+
+	QTextCursor findNext(FindFlags flags, QString const &seek, QTextCursor const &startPos)
+	{
+		auto [findflag, isRegex, shouldWrap] = breakdownFindFlags(flags);
+		auto findStr = [&](auto f, auto fPos, bool regx) {
+			return regx ? document->find(QRegularExpression(seek), fPos, f)
+			            : document->find(seek, fPos, f);
+		};
+
+		QTextCursor select = findStr(findflag, startPos, isRegex);
+		if (select.isNull() && shouldWrap)
+		{
+			int from = (findflag & 1) ? document->characterCount() : 0;
+			select = findStr(findflag, from, isRegex);
+		}
+
+		return select;
+	}
+
+	bool doFindRequest(FindFlags flags, QString const &seek)
+	{
+		if (QTextCursor select = findNext(flags, seek); !select.isNull())
+		{
+			ui.mainEdit->setTextCursor(select);
+			return true;
+		}
+
+		return false;
+	}
+
 	MainWindow *top;
 	Ui::MainWindow ui;
+	std::array<qreal, 50> zoomSlideRule;
+	size_t currentZoom = DEFAULT_ZOOM;
 	QString fileName;
 	QPrinter filePrinter;
 	QTextDocument *document;
 	QFontDialog fDialog;
 	QPrintDialog pDialog;
 	QPageSetupDialog psDialog;
+	QLabel lineColLabel, zoomLabel, lineEndLabel, formatLabel;
 	AboutDialog about;
 	FindReplaceDialog findrep;
 	bool modCheck = false;
@@ -114,7 +229,7 @@ void MainWindow::newFile()
 	if (im->editedCheck())
 	{
 		im->fileName.clear();
-		im->ui.mainEdit->setText("");
+		im->document->setPlainText("");
 		im->updateFileDisplay();
 	}
 }
@@ -139,7 +254,7 @@ void MainWindow::openFile()
 			if (fileToOpen.open(QIODeviceBase::ReadOnly))
 			{
 				QTextStream in(&fileToOpen);
-				im->ui.mainEdit->setText(in.readAll());
+				im->document->setPlainText(in.readAll());
 				im->fileName = filename;
 				im->document->setModified(false);
 				im->modCheck = false;
@@ -214,7 +329,7 @@ void MainWindow::saveFile()
 
 void MainWindow::pageSetup()
 {
-	im->psDialog.show();
+	im->psDialog.open();
 }
 
 void MainWindow::printDialog()
@@ -229,14 +344,12 @@ void MainWindow::deleteText()
 
 void MainWindow::find()
 {
-	im->findrep.focusFind(true);
-	im->findrep.show();
+	im->openFindReplace(true);
 }
 
 void MainWindow::replace()
 {
-	im->findrep.focusFind(false);
-	im->findrep.show();
+	im->openFindReplace(false);
 }
 
 void MainWindow::timeDate()
@@ -246,7 +359,7 @@ void MainWindow::timeDate()
 
 void MainWindow::wordWrap(bool checked)
 {
-	im->ui.mainEdit->setLineWrapMode(checked ? QTextEdit::WidgetWidth : QTextEdit::NoWrap);
+	im->ui.mainEdit->setLineWrapMode(checked ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
 }
 
 void MainWindow::fontDialog()
@@ -256,7 +369,7 @@ void MainWindow::fontDialog()
 
 void MainWindow::onlineHelp()
 {
-	QDesktopServices::openUrl(QUrl("https://www.kirhut.com/docs/doku.php?id=weekend:project2"));
+	QDesktopServices::openUrl(QUrl(tr("https://www.kirhut.com/docs/doku.php?id=weekend:project2")));
 }
 
 void MainWindow::aboutDialog()
@@ -273,6 +386,26 @@ void MainWindow::textChanged()
 	}
 }
 
+void MainWindow::cursorMoved()
+{
+	im->updateLineColLabel();
+}
+
+void MainWindow::zoomIn()
+{
+	im->doZoom([](size_t current) { return current + 1; });
+}
+
+void MainWindow::zoomOut()
+{
+	im->doZoom([](size_t current) { return current - 1; });
+}
+
+void MainWindow::restoreZoom()
+{
+	im->doZoom([]([[maybe_unused]] auto _) { return DEFAULT_ZOOM; });
+}
+
 void MainWindow::print()
 {
 	im->document->print(&im->filePrinter);
@@ -280,22 +413,52 @@ void MainWindow::print()
 
 void MainWindow::fontChanged(const QFont &font)
 {
-	im->ui.mainEdit->setCurrentFont(font);
+	im->document->setDefaultFont(font);
+	im->generateSlideRule();
+	im->currentZoom = DEFAULT_ZOOM;
 }
 
 void MainWindow::doFindRequest(FindFlags flags, const QString &seek)
 {
-	emit nothingToFind();
+	if (!im->doFindRequest(flags, seek))
+	{
+		emit nothingToFind();
+	}
 }
 
 void MainWindow::doReplaceRequest(FindFlags flags, const QString &seek, const QString &replace)
 {
-	emit nothingToFind();
+	QTextCursor current = im->ui.mainEdit->textCursor();
+	bool reportFail = true;
+	if (current.hasSelection())
+	{
+		current.insertText(replace);
+		reportFail = false;
+	}
+
+	if (!im->doFindRequest(flags, seek) && reportFail)
+	{
+		emit nothingToFind();
+	}
 }
 
 void MainWindow::doReplaceAllRequest(FindFlags flags, const QString &seek, const QString &replace)
 {
-	emit nothingToFind();
+	QTextCursor atFront = im->ui.mainEdit->textCursor();
+	atFront.setPosition(0);
+	bool found = false;
+	// Replace All does not want to wrap around, so ignore if the user has it set.
+	flags.set(4, false);
+	while (!(atFront = im->findNext(flags, seek, atFront)).isNull())
+	{
+		found = true;
+		atFront.insertText(replace);
+	}
+
+	if (!found)
+	{
+		emit nothingToFind();
+	}
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

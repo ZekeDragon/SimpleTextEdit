@@ -215,6 +215,70 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="replBackButton">
+       <property name="maximumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+E</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="replVariantButton">
+       <property name="maximumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+T</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="findBackButton">
+       <property name="maximumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+D</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="findVariantButton">
+       <property name="maximumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+G</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -363,6 +427,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>swapButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FindReplaceDialog</receiver>
+   <slot>doSwap()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>396</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>419</x>
+     <y>132</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>findBackButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FindReplaceDialog</receiver>
+   <slot>backFind()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>419</x>
+     <y>141</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>findVariantButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FindReplaceDialog</receiver>
+   <slot>modFind()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>419</x>
+     <y>147</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>replBackButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FindReplaceDialog</receiver>
+   <slot>backReplace()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>419</x>
+     <y>129</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>replVariantButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FindReplaceDialog</receiver>
+   <slot>modReplace()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>419</x>
+     <y>135</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>findFieldChanged(QString)</slot>
@@ -371,5 +515,10 @@
   <slot>findNextPressed()</slot>
   <slot>replacePressed()</slot>
   <slot>replaceAllPressed()</slot>
+  <slot>doSwap()</slot>
+  <slot>backReplace()</slot>
+  <slot>modReplace()</slot>
+  <slot>backFind()</slot>
+  <slot>modFind()</slot>
  </slots>
 </ui>

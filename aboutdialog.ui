@@ -47,7 +47,7 @@
           </font>
          </property>
          <property name="text">
-          <string>The Simple Qt Text Editor</string>
+          <string>Project Name Here</string>
          </property>
         </widget>
        </item>
@@ -61,7 +61,7 @@
        <item>
         <widget class="QLabel" name="versionLabel">
          <property name="text">
-          <string>Version 0.1</string>
+          <string>Version</string>
          </property>
         </widget>
        </item>
@@ -94,6 +94,9 @@ somehow has more functionality than Windows Notepad.</string>
       <widget class="QLabel" name="iconPermissionLabel">
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Icon used with permission: &lt;a href=&quot;https://www.flaticon.com/free-icons/text&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Text icons created by Freepik - Flaticon&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="openExternalLinks">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

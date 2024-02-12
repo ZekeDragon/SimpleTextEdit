@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
 ** The Simple Qt Text Editor Application
-** findreplacedialog.hpp
+** maintextedit.cpp
 ** Copyright (C) 2024 Ezekiel Oruven
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -16,56 +16,44 @@
 ** COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 ** OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***********************************************************************************************************************/
-#pragma once
+#include "maintextedit.hpp"
 
-#include <QDialog>
-
-#include <memory>
-
-#include "findflags.hpp"
-
-class FindReplaceDialog : public QDialog
+MainTextEdit::MainTextEdit(QWidget *parent) :
+    QPlainTextEdit(parent),
+    threshold(0)
 {
-	Q_OBJECT
+	// No implementation.
+}
 
-public:
-	explicit FindReplaceDialog(QWidget *parent = nullptr);
-	~FindReplaceDialog();
+void MainTextEdit::wheelEvent(QWheelEvent *e)
+{
+	if (e->modifiers().testFlag(Qt::ControlModifier))
+	{
+		int modAmount = e->angleDelta().y();
+		if (e->inverted())
+		{
+			modAmount *= -1;
+		}
 
-	void focusFind(bool findOrReplace);
-	void setFindText(const QString &text);
+		threshold += modAmount;
+		if (abs(threshold) >= 120)
+		{
+			if (threshold > 0)
+			{
+				emit scrollZoomIn();
+			}
+			else
+			{
+				emit scrollZoomOut();
+			}
 
-signals:
-	void findRequested(FindFlags flags, QString const &seek);
-	void replaceRequested(FindFlags flags, QString const &seek, QString const &replace);
-	void replaceAllRequested(FindFlags flags, QString const &seek, QString const &replace);
+			threshold = 0;
+		}
 
-public slots:
-	void findFieldChanged(QString const &newText);
-	void replaceFieldChanged(QString const &newText);
-
-	void regexToggled(bool checked);
-
-	void findNextPressed();
-	void replacePressed();
-	void replaceAllPressed();
-
-	void reportNoFind();
-	void doSwap();
-
-private slots:
-	void silenceNotFound();
-
-	void backReplace();
-	void modReplace();
-	void backFind();
-	void modFind();
-
-protected:
-	void showEvent(QShowEvent *event) override;
-
-private:
-	struct Impl;
-	std::unique_ptr<Impl> im;
-};
-
+		e->accept();
+	}
+	else
+	{
+		QPlainTextEdit::wheelEvent(e);
+	}
+}

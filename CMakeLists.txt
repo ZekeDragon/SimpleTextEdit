@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 
-project(SimpleTextEdit VERSION 0.1 LANGUAGES CXX)
+project(SimpleTextEdit VERSION 0.5.0 LANGUAGES CXX DESCRIPTION "Simple Qt Text Editor")
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -13,12 +13,13 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets PrintSupport LinguistT
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport LinguistTools)
 
 set(TS_FILES
-        SimpleTextEdit_en_US.ts
-        SimpleTextEdit_es_US.ts
-        SimpleTextEdit_en_CA.ts
-        SimpleTextEdit_fr_CA.ts)
+        SimpleTextEdit_en.ts
+        SimpleTextEdit_es.ts
+        SimpleTextEdit_fr.ts
+        SimpleTextEdit_ko.ts
+)
 
-set(PROJECT_SOURCES
+set(SOURCE_FILES
         main.cpp
         findflags.hpp
         mainwindow.cpp
@@ -30,9 +31,17 @@ set(PROJECT_SOURCES
         findreplacedialog.cpp
         findreplacedialog.hpp
         findreplacedialog.ui
+        maintextedit.hpp
+        maintextedit.cpp
+)
+
+set(PROJECT_SOURCES
+        ${SOURCE_FILES}
         images.qrc
         ${TS_FILES}
 )
+
+configure_file(buildinfo.hpp.in headers/buildinfo.hpp)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SimpleTextEdit
@@ -44,7 +53,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 
-    qt_add_translations(SimpleTextEdit TS_FILES ${TS_FILES})
+    qt_add_translations(SimpleTextEdit TS_FILES ${TS_FILES} SOURCES ${SOURCE_FILES})
 else()
     if(ANDROID)
         add_library(SimpleTextEdit SHARED
@@ -61,6 +70,7 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
+target_include_directories(SimpleTextEdit PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/headers)
 target_link_libraries(SimpleTextEdit PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
                                      PRIVATE Qt${QT_VERSION_MAJOR}::PrintSupport)
 

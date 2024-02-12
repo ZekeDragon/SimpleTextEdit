@@ -58,7 +58,11 @@ public slots:
 	void aboutDialog();
 
 	void textChanged();
+	void cursorMoved();
 
+	void zoomIn();
+	void zoomOut();
+	void restoreZoom();
 
 private slots:
 	void print();

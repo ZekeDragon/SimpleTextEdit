@@ -18,23 +18,65 @@
 ***********************************************************************************************************************/
 #include "mainwindow.hpp"
 
+#include <algorithm>
+
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+
+#include "buildinfo.hpp"
+
+QCommandLineOption localeOp()
+{
+	return { "locale", QApplication::tr("Set the translation locale file to use.", "Core"), "code" };
+}
+
+void setupParser(QCommandLineParser &parser)
+{
+	parser.addPositionalArgument(QApplication::tr("files", "Core"),
+	                             QApplication::tr("Files to open in the Text Editor.", "Core"),
+	                             QApplication::tr("[files...]", "Core"));
+	parser.addVersionOption();
+	parser.addHelpOption();
+	parser.setApplicationDescription(
+	            QApplication::tr("The Simple Qt Text Editor is a clone of Windows Notepad for all major platforms.",
+	                             "Core"));
+	parser.addOption(localeOp());
+}
 
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-
+	const QStringList args = a.arguments();
 	QTranslator translator;
-	const QStringList uiLanguages = QLocale::system().uiLanguages();
-	for (const QString &locale : uiLanguages) {
-		const QString baseName = "SimpleTextEdit_" + QLocale(locale).name();
-		if (translator.load(":/i18n/" + baseName)) {
+	QStringList uiLanguages = QLocale::system().uiLanguages();
+	if (auto localeLoc = std::find(args.begin(), args.end(), "--locale");
+	    localeLoc != args.end() && ++localeLoc != args.end())
+	{
+		uiLanguages.push_front(*localeLoc);
+	}
+
+	for (const QString &locale : uiLanguages)
+	{
+		QLocale qLocale(locale);
+		const QString baseName = "SimpleTextEdit_" + qLocale.name();
+		if (translator.load(":/i18n/" + baseName))
+		{
 			a.installTranslator(&translator);
+			QLocale::setDefault(qLocale);
 			break;
 		}
 	}
+
+	a.setApplicationName(QApplication::tr("Simple Qt Text Editor", "Core"));
+	a.setApplicationVersion(versionString());
+	a.setOrganizationName(QApplication::tr("KirHut Software Company", "Core"));
+	a.setOrganizationDomain(QApplication::tr("kirhut.com", "Core"));
+	QCommandLineParser parser;
+	setupParser(parser);
+	parser.process(args);
 	MainWindow w;
 	w.show();
 	return a.exec();

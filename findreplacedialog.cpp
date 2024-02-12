@@ -22,6 +22,9 @@
 #include <QLineEdit>
 #include <QKeyEvent>
 #include <QTimer>
+#include <QShortcut>
+
+#include <iostream>
 
 struct FindReplaceDialog::Impl
 {
@@ -47,28 +50,12 @@ struct FindReplaceDialog::Impl
 		ui.replaceAllButton->setDisabled(newText.isEmpty() || !ui.findNextButton->isEnabled());
 	}
 
-	void testKeyChange(QKeyEvent *event)
-	{
-		if (event->modifiers() & Qt::ShiftModifier && event->modifiers() & Qt::ControlModifier)
-		{
-			if (!isBackwardsToggled)
-			{
-				isBackwardsToggled = true;
-				ui.scanBackwardsCheck->toggle();
-			}
-		}
-		else if (isBackwardsToggled)
-		{
-			isBackwardsToggled = false;
-			ui.scanBackwardsCheck->toggle();
-		}
-	}
-
-	FindFlags flags()
+	FindFlags flags(bool modSearch = false, bool backSeek = false)
 	{
 		FindFlags flags = FFlags::None;
-		if (ui.scanBackwardsCheck->isChecked()) flags |= FFlags::FindBackward;
+		if (ui.scanBackwardsCheck->isChecked() != backSeek) flags |= FFlags::FindBackward;
 		if (!ui.ignoreCaseCheck->isChecked()) flags |= FFlags::FindCaseSensitively;
+		if (modSearch) flags |= FFlags::FindWholeWords;
 		if (ui.matchRegexCheck->isChecked()) flags |= FFlags::FindByRegex;
 		if (ui.wrapAroundCheck->isChecked()) flags |= FFlags::WrapAround;
 		return flags;
@@ -78,7 +65,6 @@ struct FindReplaceDialog::Impl
 	Ui::FindReplaceDialog ui;
 	QLineEdit *focusedEdit;
 	QTimer notFoundCooldown;
-	bool isBackwardsToggled = false;
 };
 
 FindReplaceDialog::FindReplaceDialog(QWidget *parent) :
@@ -96,6 +82,11 @@ FindReplaceDialog::~FindReplaceDialog()
 void FindReplaceDialog::focusFind(bool findOrReplace)
 {
 	im->focusFind(findOrReplace);
+}
+
+void FindReplaceDialog::setFindText(QString const &text)
+{
+	im->ui.findLineEdit->setText(text);
 }
 
 void FindReplaceDialog::findFieldChanged(QString const &newText)
@@ -135,19 +126,40 @@ void FindReplaceDialog::reportNoFind()
 	im->notFoundCooldown.start();
 }
 
+void FindReplaceDialog::doSwap()
+{
+	QString oldFindContent = im->ui.findLineEdit->text();
+	im->ui.findLineEdit->setText(im->ui.replaceLineEdit->text());
+	im->ui.replaceLineEdit->setText(oldFindContent);
+}
+
 void FindReplaceDialog::silenceNotFound()
 {
 	im->ui.notFoundLabel->setVisible(false);
 }
 
-void FindReplaceDialog::keyPressEvent(QKeyEvent *event)
+void FindReplaceDialog::backReplace()
 {
-	im->testKeyChange(event);
-	QDialog::keyPressEvent(event);
+	emit replaceRequested(im->flags(false, true), im->ui.findLineEdit->text(), im->ui.replaceLineEdit->text());
 }
 
-void FindReplaceDialog::keyReleaseEvent(QKeyEvent *event)
+void FindReplaceDialog::modReplace()
 {
-	im->testKeyChange(event);
-	QDialog::keyReleaseEvent(event);
+	emit replaceRequested(im->flags(true, false), im->ui.findLineEdit->text(), im->ui.replaceLineEdit->text());
+}
+
+void FindReplaceDialog::backFind()
+{
+	emit findRequested(im->flags(false, true), im->ui.findLineEdit->text());
+}
+
+void FindReplaceDialog::modFind()
+{
+	emit findRequested(im->flags(true, false), im->ui.findLineEdit->text());
+}
+
+void FindReplaceDialog::showEvent(QShowEvent *event)
+{
+	QDialog::showEvent(event);
+	im->focusedEdit->setFocus(Qt::PopupFocusReason);
 }

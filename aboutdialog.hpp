@@ -20,9 +20,7 @@
 
 #include <QDialog>
 
-namespace Ui {
-class AboutDialog;
-}
+#include <memory>
 
 class AboutDialog : public QDialog
 {
@@ -33,6 +31,7 @@ public:
 	~AboutDialog();
 
 private:
-	Ui::AboutDialog *ui;
+	struct Impl;
+	std::unique_ptr<Impl> im;
 };
 

@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
 ** The Simple Qt Text Editor Application
-** findreplacedialog.hpp
+** maintextedit.hpp
 ** Copyright (C) 2024 Ezekiel Oruven
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -18,54 +18,23 @@
 ***********************************************************************************************************************/
 #pragma once
 
-#include <QDialog>
+#include <QPlainTextEdit>
 
-#include <memory>
-
-#include "findflags.hpp"
-
-class FindReplaceDialog : public QDialog
+class MainTextEdit : public QPlainTextEdit
 {
 	Q_OBJECT
 
 public:
-	explicit FindReplaceDialog(QWidget *parent = nullptr);
-	~FindReplaceDialog();
-
-	void focusFind(bool findOrReplace);
-	void setFindText(const QString &text);
+	explicit MainTextEdit(QWidget *parent = nullptr);
 
 signals:
-	void findRequested(FindFlags flags, QString const &seek);
-	void replaceRequested(FindFlags flags, QString const &seek, QString const &replace);
-	void replaceAllRequested(FindFlags flags, QString const &seek, QString const &replace);
-
-public slots:
-	void findFieldChanged(QString const &newText);
-	void replaceFieldChanged(QString const &newText);
-
-	void regexToggled(bool checked);
-
-	void findNextPressed();
-	void replacePressed();
-	void replaceAllPressed();
-
-	void reportNoFind();
-	void doSwap();
-
-private slots:
-	void silenceNotFound();
-
-	void backReplace();
-	void modReplace();
-	void backFind();
-	void modFind();
+	void scrollZoomIn();
+	void scrollZoomOut();
 
 protected:
-	void showEvent(QShowEvent *event) override;
+	void wheelEvent(QWheelEvent *e) override;
 
 private:
-	struct Impl;
-	std::unique_ptr<Impl> im;
+	int threshold;
 };
 
